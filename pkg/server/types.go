@@ -12,3 +12,10 @@ type Server struct {
 	zbx *zabbix.Zabbix
 	mux *http.ServeMux
 }
+
+type Host struct {
+	Id          int
+	Name        string
+	DisplayName string
+	Groups      []int
+}

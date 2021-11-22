@@ -3,7 +3,7 @@ package zabbix
 import (
 	"fmt"
 
-	zbxapi "github.com/cavaliercoder/go-zabbix"
+	z "github.com/cavaliercoder/go-zabbix"
 	"github.com/spf13/viper"
 )
 
@@ -11,14 +11,17 @@ type Zabbix struct {
 	url      string
 	username string
 	password string
-	session  *zbxapi.Session
+	session  *z.Session
 }
 
 type Interface struct {
-	name string
-	rx   int
-	tx   int
+	Name  string `json:"name"`
+	Rx    int    `json:"rx"`
+	Tx    int    `json:"tx"`
+	Speed int    `json:"speed"`
 }
+
+type Interfaces []Interface
 
 func New() *Zabbix {
 	zbx := Zabbix{
@@ -27,7 +30,7 @@ func New() *Zabbix {
 		password: viper.GetString("zabbix.password"),
 	}
 
-	session, err := zbxapi.NewSession(
+	session, err := z.NewSession(
 		zbx.url,
 		zbx.password,
 		zbx.password,
@@ -43,4 +46,33 @@ func New() *Zabbix {
 	return &zbx
 }
 
-func (zbx *Zabbix) ListHosts() {}
+func (zbx *Zabbix) GetHosts() ([]z.Host, error) {
+	// Get hosts (id, name) and the groups they're in (id, name).
+	hosts, err := zbx.session.GetHosts(z.HostGetParams{
+		GetParameters: z.GetParameters{
+			OutputFields: z.SelectFields{"hostid", "name"},
+		},
+		SelectGroups: z.SelectFields{"groupid", "name"},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return hosts, nil
+}
+
+func (zbx *Zabbix) GetValues(hostids []string) ([]z.Item, error) {
+	// Get a list of relevant items for the host with id `hostid`.
+	values, err := zbx.session.GetItems(z.ItemGetParams{
+		GetParameters: z.GetParameters{
+			OutputFields: "extend",
+		},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return values, nil
+}
