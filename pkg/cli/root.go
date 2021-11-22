@@ -97,10 +97,7 @@ func initHook() {
 	viper.SetDefault("server.port", 8081)
 	// TODO: Implement.
 	viper.SetDefault("server.trusted_proxies", "")
-	viper.SetDefault("server.routes.view", "/view")
-	viper.SetDefault("server.routes.edit", "/edit")
-	viper.SetDefault("server.routes.api_prefix", "/api/v1")
-	viper.SetDefault("zabbix.url", "https://zabbix/zabbix/api_jsonrpc.php")
+	viper.SetDefault("zabbix.url", "http://10.10.10.100/api_jsonrpc.php")
 	viper.SetDefault("zabbix.username", "sa_pano")
 	viper.SetDefault("zabbix.password", "sa_pano")
 

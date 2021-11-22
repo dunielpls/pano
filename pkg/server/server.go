@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/dunielpls/pano/pkg/zabbix"
@@ -50,42 +49,14 @@ func (srv *Server) Stop() error {
 }
 
 func (srv *Server) initRoutes() {
-	// Static.
-	viewRoute := fmt.Sprintf(
-		"%s/",
-		strings.TrimRight(
-			viper.GetString("server.routes.view"),
-			"/",
-		),
-	)
-	editRoute := fmt.Sprintf(
-		"%s/",
-		strings.TrimRight(
-			viper.GetString("server.routes.edit"),
-			"/",
-		),
-	)
-
-	// Serve the same fromtend for both view and edit.
-	srv.mux.Handle(viewRoute, http.FileServer(http.Dir("./static")))
-	srv.mux.Handle(editRoute, http.FileServer(http.Dir("./static")))
-
-	// Local function to prefix paths with the API prefix.
-	// Example: "/hosts" -> "/api/v1/hosts"
-	prefixAPI := func(s string) string {
-		return fmt.Sprintf(
-			"%s%s",
-			strings.TrimRight(
-				viper.GetString("server.routes.api_prefix"),
-				"/",
-			),
-			s,
-		)
-	}
+	// Frontend.
+	srv.mux.Handle("/", http.FileServer(http.Dir("./static")))
 
 	// API.
-	srv.mux.HandleFunc(prefixAPI("/hosts/list"), srv.apiHandler)
-	srv.mux.HandleFunc(prefixAPI("/hosts/interfaces"), srv.apiHandler)
+	srv.mux.HandleFunc("/api/v1/diagram.xml", srv.diagramXmlHandler)
+	srv.mux.HandleFunc("/api/v1/save_diagram", srv.saveDiagramHandler)
+	srv.mux.HandleFunc("/api/v1/hosts/list", srv.apiHandler)
+	srv.mux.HandleFunc("/api/v1/hosts/interfaces", srv.apiHandler)
 }
 
 func (srv *Server) initZabbix() {
