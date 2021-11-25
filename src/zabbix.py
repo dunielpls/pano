@@ -129,9 +129,9 @@ class _MethodWrapper(object):
 
             # Call the parent's `do` function to do the actual work.
             return self._parent.do(
-                method = f"{self._first_part}.{second_part}",
-                params = kwargs,
-                login  = _is_login
+                method     = f"{self._first_part}.{second_part}",
+                params     = kwargs,
+                _is_login  = _is_login
             )
 
         return fn
