@@ -11,7 +11,7 @@ from fastapi             import (FastAPI, Query)
 from fastapi.routing     import APIRouter
 from fastapi.staticfiles import StaticFiles
 
-from zabbix import Zabbix, APIException
+from zabbix import Zabbix
 
 app = FastAPI()
 api = APIRouter()
@@ -36,10 +36,10 @@ async def shutdown_event():
 
 # List hosts and optionally their groups.
 @api.get("/hosts/list")
-async def api_hosts_list(group_id:    Optional[int]  = None,
-                         list_groups: Optional[bool] = False):
+async def api_hosts_list(group_ids:   Optional[List[int]] = Query(None),
+                         list_groups: Optional[bool]      = False):
     data = await app.zabbix.host.get(
-        groupid      = group_id,
+        groupids     = group_ids,
         output       = [ "name" ],
         selectGroups = [ "name" ] if list_groups else None
     )
@@ -51,8 +51,8 @@ async def api_hosts_list(group_id:    Optional[int]  = None,
 async def api_hosts_get(host_id:     int,
                         list_groups: Optional[bool] = False):
     data = await app.zabbix.host.get(
-        hostid       = host_id,
-        output       = "expand",#[ "name" ],
+        hostids      = [ host_id ],
+        output       = "extend",
         selectGroups = [ "name" ] if list_groups else None
     )
 
@@ -61,14 +61,26 @@ async def api_hosts_get(host_id:     int,
 # List triggers for a specific host.
 @api.get("/items/list")
 async def api_items_list(host_id: int):
-    return {
-        "status":  "failure",
-        "message": "not implemented",
-        "test":    host_id
-    }
+    data = await app.zabbix.item.get(
+        hostids = [ host_id ],
+        output  = "extend",
+    )
+
+    return data
+
+# List triggers for a specific host.
+@api.get("/items/list")
+async def api_items_list(host_id: int,
+                         search:  Optional[str] = None):
+    data = await app.zabbix.item.get(
+        hostids = [ host_id ],
+        output  = "extend",
+    )
+
+    return data
 
 # Expand a specific trigger expression for a specific host.
-@api.get("/items/expand")
+@api.get("/macro/expand")
 async def api_items_expand(host_id:    int,
                            expression: Optional[List[str]] = Query(None)):
     return {
@@ -87,6 +99,6 @@ app.include_router(
 # Serve the frontend.
 app.mount(
     path = "/",
-    app  = StaticFiles(directory = "static", html = True),
-    name = "frontend"
+    name = "frontend",
+    app  = StaticFiles(directory = "static", html = True)
 )
